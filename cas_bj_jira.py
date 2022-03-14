@@ -29,7 +29,7 @@ def email_notify(mail_message):
         sys.exit(1)
     # print(mail_message)
     mail_server = "mail-sh.amlogic.com"
-    receivers = ['pengfei.liu@amlogic.com']
+    receivers = ['pengfei.liu@amlogic.com', 'zhongwei.zhao@amlogic.com', 'jiangfei.han@amlogic.com', 'peifu.jiang@amlogic.com']
 
     message = MIMEText(mail_message, 'html', 'utf-8')
     message['From'] = Header("Security-CAS-BJ Jira", 'utf-8')
