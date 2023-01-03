@@ -7,6 +7,7 @@ from dateutil.relativedelta import relativedelta
 import smtplib
 from email.mime.text import MIMEText
 from email.header import Header
+from git import Repo
 import configparser
 from os.path import expanduser
 from HTMLTable import (
@@ -19,6 +20,7 @@ LICENSE_DURATION = 180
 #LICENSE_DURATION = 30
 # Apply library 15 days in advance
 APPLY_TIME_IN_ADVANCE = 15
+RELEASE_FILE = "./release_history.xml"
 
 USER = ""
 PASSWORD = ""
@@ -43,15 +45,16 @@ def get_args():
         sys.exit(1)
 
 
-    parser = ArgumentParser()
-    parser.add_argument('--in', required = True, dest = 'inf', \
-            help = 'input release history based XML format')
-    return parser.parse_args()
+    #parser = ArgumentParser()
+    #parser.add_argument('--in', required = True, dest = 'inf', \
+    #        help = 'input release history based XML format')
+    #return parser.parse_args()
 
 def email_notify(mail_message):
     # print(mail_message)
     mail_server = "mail-sh.amlogic.com"
     receivers = ['jiangfei.han@amlogic.com', 'pengfei.liu@amlogic.com', 'zhihui.zhang@amlogic.com', 'yahui.han@amlogic.com', 'shenghui.geng@amlogic.com', 'yanting.zhou@amlogic.com', 'peifu.jiang@amlogic.com', 'gaojie.song@amlogic.com', 'Vladimir.Maksovic@amlogic.com']
+    #receivers = ['pengfei.liu@amlogic.com']
 
     message = MIMEText(mail_message, 'html', 'utf-8')
     message['From'] = Header("Verimatrix Developer Group", 'utf-8')
@@ -143,18 +146,18 @@ def process_release_history(release, table):
         <p>Hello Jiangfei,</p>
         <p>The following Verimatrix E2E libraries will expire in 15 days, please apply the new libraries.</p>
         {list_message}
-        <p><span style="color: #000000;">For more details, please refer to confluence: https://confluence.amlogic.com/display/SW/VMX+E2E+Library+Release+History</span></p>
+        <p><span style="color: #000000;">For more details, please refer to confluence: <a href="https://confluence.amlogic.com/display/SW/VMX+E2E+Library+Release+History">VMX E2E Library Release History</a></span></p>
         <p>Thanks,</p>
         <p>Verimatrix Developer Group</p>
         """.format(list_message = list_message)
         email_notify(mail_message)
 
-
-if __name__ == "__main__":
+def main_process():
     space = "SW"
     page_title = "VMX E2E Library Release History"
 
-    args = get_args()
+    #args = get_args()
+    get_args()
     
     confluence = Confluence(url="https://confluence.amlogic.com", username=USER, password=PASSWORD)
     page_id = confluence.get_page_id(space, page_title)
@@ -170,7 +173,14 @@ if __name__ == "__main__":
         ('Tracking Number',  'SoC',  'Ecosystem', 'Release Date', 'CL Number', 'Type', 'Note'),
     ))
 
-    process_release_history(args.inf, table)
+    # 2. Pull the git of vmx bootloader
+    release_repo = Repo("/mnt/fileroot/pengfei.liu/src/vmx/vmx_release_binaries")
+    release_repo.remotes.origin.fetch()
+    release_repo.git.pull()
+    print("The latest commit:%s" %(release_repo.commit('master')))
+
+    #process_release_history(args.inf, table)
+    process_release_history(RELEASE_FILE, table)
     html = table.to_html()
     # print(html)
     confluence.update_page(  
@@ -178,3 +188,6 @@ if __name__ == "__main__":
         page_title,
         html)
     print("Completed")
+
+if __name__ == "__main__":
+    main_process()

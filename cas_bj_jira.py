@@ -15,6 +15,24 @@ USER = ""
 PASSWORD = ""
 EMAIL = ""
 
+def get_args():
+    from argparse import ArgumentParser
+    global USER
+    global PASSWORD
+    global EMAIL
+    home = expanduser("~")
+    try:
+        path = home + '/.vmx_user.ini'
+        config = configparser.ConfigParser()
+        config.read(path)
+        USER = config['DEFAULT']['user']
+        PASSWORD = config['DEFAULT']['pwd']
+        EMAIL = config['DEFAULT']['email']
+        #print("User:%s, Password:%s, email:%s" %(USER, PASSWORD, EMAIL))
+    except:
+        print("Please check ~/.vmx_user.ini")
+        sys.exit(1)
+
 def email_notify(mail_message):
     home = expanduser("~")
     try:
@@ -32,10 +50,10 @@ def email_notify(mail_message):
     receivers = ['pengfei.liu@amlogic.com', 'zhongwei.zhao@amlogic.com', 'jiangfei.han@amlogic.com', 'peifu.jiang@amlogic.com']
 
     message = MIMEText(mail_message, 'html', 'utf-8')
-    message['From'] = Header("Security-CAS-BJ Jira", 'utf-8')
+    message['From'] = Header("Security-CAS-Certification Jira", 'utf-8')
     message['To'] = ", ".join(receivers)
      
-    subject = 'Security CAS BJ Team Jira Reminder'
+    subject = 'Security CAS Certification Team Jira Reminder'
     message['Subject'] = Header(subject, 'utf-8')
      
     try:
@@ -50,7 +68,7 @@ def email_notify(mail_message):
 
 def process_jira():
     notify = 0
-    auth_jira = JIRA('https://jira.amlogic.com', auth=('pengfei.liu', 'Monday$0905'))
+    auth_jira = JIRA('https://jira.amlogic.com', auth=(USER, PASSWORD))
     mail_info = """
     <p>Hello Guys,</p>
     <h2><span style="color: #ff0000; background-color: #ffff00;"><strong>Please process the following Jira ASAP.</strong></span></h2>
@@ -131,10 +149,10 @@ def process_jira():
     </tbody>
     </table>
     <p>&nbsp;</p>
-    <p>Dashboard: <a href="https://jira.amlogic.com/secure/Dashboard.jspa?selectPageId=14620">Security-CAS-BJ Team Dashboard Link</a></p>
+    <p>Dashboard: <a href="https://jira.amlogic.com/secure/Dashboard.jspa?selectPageId=14620">Security CAS Certification Team Dashboard Link</a></p>
     <p>&nbsp;</p>
     <p>Thanks,</p>
-    <p>Security-CAS-BJ Team</p>
+    <p>Security CAS Certification Team</p>
     """
     print(mail_info)
     if notify > 0:
@@ -142,4 +160,5 @@ def process_jira():
         notify = 0
 
 if __name__ == "__main__":
+    args = get_args()
     process_jira()
